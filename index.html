@@ -241,47 +241,62 @@
         }
 
         function drawSlits(svg, centerX, centerY, innerRadius, outerRadius, angleOffset, slitCount, slitWidth, scale) {
-            const angleStep = (Math.PI * 2) / slitCount;
-            const slitHalfWidth = (slitWidth / 2) * scale;
+            // In a real Bahtinov mask, we don't distribute slits evenly around the circle
+            // Instead, we have three sets of parallel lines at specific angles:
+            // 0°, +angle, and -angle (relative to some base orientation)
             
-            for (let i = 0; i < slitCount; i++) {
-                const angle = i * angleStep + (angleOffset * Math.PI / 180);
+            // Calculate the number of slits per radial line
+            const numRadialLines = 6; // Number of radial directions for slits
+            const slitsPerLine = Math.floor(slitCount / numRadialLines);
+            const angleStep = (Math.PI * 2) / numRadialLines;
+            
+            for (let r = 0; r < numRadialLines; r++) {
+                // Calculate the base angle for this radial direction
+                const baseAngle = r * angleStep;
                 
-                // Calculate start and end points of the slit
-                const startX = centerX + Math.cos(angle) * innerRadius;
-                const startY = centerY + Math.sin(angle) * innerRadius;
-                const endX = centerX + Math.cos(angle) * outerRadius;
-                const endY = centerY + Math.sin(angle) * outerRadius;
-                
-                // Calculate perpendicular direction for slit width
-                const perpAngle = angle + Math.PI / 2;
-                const halfWidthX = Math.cos(perpAngle) * slitHalfWidth;
-                const halfWidthY = Math.sin(perpAngle) * slitHalfWidth;
-                
-                // Create rectangular slit
-                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                
-                // Position the rectangle along the radial line
-                const midX = (startX + endX) / 2;
-                const midY = (startY + endY) / 2;
-                
-                // Calculate the position of the rectangle center
-                const rectCenterX = midX;
-                const rectCenterY = midY;
-                
-                // Calculate width and height of the rectangle
-                const length = outerRadius - innerRadius;
-                const rectX = rectCenterX - slitHalfWidth - Math.cos(angle) * length/2;
-                const rectY = rectCenterY - slitHalfWidth - Math.sin(angle) * length/2;
-                
-                rect.setAttribute("x", rectX);
-                rect.setAttribute("y", rectY);
-                rect.setAttribute("width", slitHalfWidth * 2);
-                rect.setAttribute("height", length);
-                rect.setAttribute("fill", "black");
-                rect.setAttribute("transform", `rotate(${angle * 180 / Math.PI}, ${centerX}, ${centerY})`);
-                
-                svg.appendChild(rect);
+                // Draw parallel slits along this radial direction
+                for (let s = 0; s < slitsPerLine; s++) {
+                    // Distribute slits along the radial direction
+                    const positionRatio = (s + 0.5) / slitsPerLine;
+                    
+                    // Calculate two points along the radial line to define the slit direction
+                    const innerX = centerX + Math.cos(baseAngle) * innerRadius;
+                    const innerY = centerY + Math.sin(baseAngle) * innerRadius;
+                    const outerX = centerX + Math.cos(baseAngle) * outerRadius;
+                    const outerY = centerY + Math.sin(baseAngle) * outerRadius;
+                    
+                    // Find a point along the radial line where the slit will be centered
+                    const slitCenterX = innerX + (outerX - innerX) * positionRatio;
+                    const slitCenterY = innerY + (outerY - innerY) * positionRatio;
+                    
+                    // Now draw the slit at the angle offset (the characteristic Bahtinov angle)
+                    const slit = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    
+                    // Length of the slit (perpendicular to the radial direction)
+                    const slitLength = (outerRadius - innerRadius) * 0.3; // Make it a fraction of the available space
+                    const halfLength = slitLength / 2;
+                    
+                    // Calculate the slit direction (perpendicular to the radial direction, plus offset angle)
+                    const slitAngle = baseAngle + Math.PI/2 + (angleOffset * Math.PI / 180); // +90° to be perpendicular
+                    
+                    // Calculate endpoints of the slit
+                    const dx = Math.cos(slitAngle) * halfLength;
+                    const dy = Math.sin(slitAngle) * halfLength;
+                    
+                    const x1 = slitCenterX - dx;
+                    const y1 = slitCenterY - dy;
+                    const x2 = slitCenterX + dx;
+                    const y2 = slitCenterY + dy;
+                    
+                    slit.setAttribute("x1", x1);
+                    slit.setAttribute("y1", y1);
+                    slit.setAttribute("x2", x2);
+                    slit.setAttribute("y2", y2);
+                    slit.setAttribute("stroke", "black");
+                    slit.setAttribute("stroke-width", slitWidth * scale);
+                    
+                    svg.appendChild(slit);
+                }
             }
         }
 
