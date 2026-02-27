@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahtinov Mask Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="range"], input[type="number"] {
+            width: 100%;
+            padding: 5px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .preview-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        svg {
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        
+        .downloads {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .downloads button {
+            margin: 10px 5px;
+        }
+        
+        .info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bahtinov Mask Generator</h1>
+        
+        <div class="info">
+            <p>A Bahtinov mask is a device used in astrophotography to achieve precise focus. It creates diffraction spikes that make it easy to determine when your telescope is perfectly focused.</p>
+            <p>Adjust the parameters below to customize your mask, then download the SVG or STL file.</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="diameter">Mask Diameter (mm):</label>
+                <input type="range" id="diameter" min="50" max="300" value="200">
+                <input type="number" id="diameter-value" value="200" min="50" max="300">
+            </div>
+            
+            <div class="control-group">
+                <label for="innerDiameter">Inner Diameter (mm):</label>
+                <input type="range" id="innerDiameter" min="10" max="100" value="50">
+                <input type="number" id="innerDiameter-value" value="50" min="10" max="100">
+            </div>
+            
+            <div class="control-group">
+                <label for="slitCount">Slit Count:</label>
+                <input type="range" id="slitCount" min="10" max="100" value="30">
+                <input type="number" id="slitCount-value" value="30" min="10" max="100">
+            </div>
+            
+            <div class="control-group">
+                <label for="slitWidth">Slit Width (mm):</label>
+                <input type="range" id="slitWidth" min="0.5" max="5" step="0.1" value="1">
+                <input type="number" id="slitWidth-value" value="1" step="0.1" min="0.5" max="5">
+            </div>
+            
+            <div class="control-group">
+                <label for="slitAngle">Slit Angle (degrees):</label>
+                <input type="range" id="slitAngle" min="1" max="45" value="15">
+                <input type="number" id="slitAngle-value" value="15" min="1" max="45">
+            </div>
+            
+            <div class="control-group">
+                <label for="thickness">Mask Thickness (mm):</label>
+                <input type="range" id="thickness" min="1" max="10" value="3">
+                <input type="number" id="thickness-value" value="3" min="1" max="10">
+            </div>
+        </div>
+        
+        <button id="generate-btn">Generate Mask</button>
+        
+        <div class="preview-container">
+            <svg id="mask-preview" width="400" height="400"></svg>
+        </div>
+        
+        <div class="downloads">
+            <button id="download-svg">Download SVG</button>
+            <button id="download-stl">Download STL</button>
+        </div>
+    </div>
+
+    <script>
+        // Link range inputs with number inputs
+        document.getElementById('diameter').addEventListener('input', function() {
+            document.getElementById('diameter-value').value = this.value;
+        });
+        
+        document.getElementById('diameter-value').addEventListener('input', function() {
+            document.getElementById('diameter').value = this.value;
+        });
+        
+        document.getElementById('innerDiameter').addEventListener('input', function() {
+            document.getElementById('innerDiameter-value').value = this.value;
+        });
+        
+        document.getElementById('innerDiameter-value').addEventListener('input', function() {
+            document.getElementById('innerDiameter').value = this.value;
+        });
+        
+        document.getElementById('slitCount').addEventListener('input', function() {
+            document.getElementById('slitCount-value').value = this.value;
+        });
+        
+        document.getElementById('slitCount-value').addEventListener('input', function() {
+            document.getElementById('slitCount').value = this.value;
+        });
+        
+        document.getElementById('slitWidth').addEventListener('input', function() {
+            document.getElementById('slitWidth-value').value = this.value;
+        });
+        
+        document.getElementById('slitWidth-value').addEventListener('input', function() {
+            document.getElementById('slitWidth').value = this.value;
+        });
+        
+        document.getElementById('slitAngle').addEventListener('input', function() {
+            document.getElementById('slitAngle-value').value = this.value;
+        });
+        
+        document.getElementById('slitAngle-value').addEventListener('input', function() {
+            document.getElementById('slitAngle').value = this.value;
+        });
+        
+        document.getElementById('thickness').addEventListener('input', function() {
+            document.getElementById('thickness-value').value = this.value;
+        });
+        
+        document.getElementById('thickness-value').addEventListener('input', function() {
+            document.getElementById('thickness').value = this.value;
+        });
+
+        // Generate mask function
+        function generateMask() {
+            const diameter = parseFloat(document.getElementById('diameter').value);
+            const innerDiameter = parseFloat(document.getElementById('innerDiameter').value);
+            const slitCount = parseInt(document.getElementById('slitCount').value);
+            const slitWidth = parseFloat(document.getElementById('slitWidth').value);
+            const slitAngle = parseFloat(document.getElementById('slitAngle').value);
+            
+            const svg = document.getElementById('mask-preview');
+            svg.innerHTML = '';
+            
+            const centerX = 200;
+            const centerY = 200;
+            const outerRadius = Math.min(centerX, centerY) - 10;
+            const scale = outerRadius / (diameter / 2);
+            const innerRadius = (innerDiameter / 2) * scale;
+            
+            // Draw outer circle
+            const outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            outerCircle.setAttribute("cx", centerX);
+            outerCircle.setAttribute("cy", centerY);
+            outerCircle.setAttribute("r", outerRadius);
+            outerCircle.setAttribute("fill", "white");
+            outerCircle.setAttribute("stroke", "black");
+            outerCircle.setAttribute("stroke-width", "1");
+            svg.appendChild(outerCircle);
+            
+            // Draw inner circle
+            const innerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            innerCircle.setAttribute("cx", centerX);
+            innerCircle.setAttribute("cy", centerY);
+            innerCircle.setAttribute("r", innerRadius);
+            innerCircle.setAttribute("fill", "black");
+            svg.appendChild(innerCircle);
+            
+            // Draw slits in three patterns: +0°, +angle°, -angle°
+            drawSlits(svg, centerX, centerY, innerRadius, outerRadius, 0, slitCount, slitWidth, scale);
+            drawSlits(svg, centerX, centerY, innerRadius, outerRadius, slitAngle, slitCount, slitWidth, scale);
+            drawSlits(svg, centerX, centerY, innerRadius, outerRadius, -slitAngle, slitCount, slitWidth, scale);
+        }
+
+        function drawSlits(svg, centerX, centerY, innerRadius, outerRadius, angleOffset, slitCount, slitWidth, scale) {
+            const angleStep = (Math.PI * 2) / slitCount;
+            const slitHalfWidth = (slitWidth / 2) * scale;
+            
+            for (let i = 0; i < slitCount; i++) {
+                const angle = i * angleStep + (angleOffset * Math.PI / 180);
+                
+                // Calculate start and end points of the slit
+                const startX = centerX + Math.cos(angle) * innerRadius;
+                const startY = centerY + Math.sin(angle) * innerRadius;
+                const endX = centerX + Math.cos(angle) * outerRadius;
+                const endY = centerY + Math.sin(angle) * outerRadius;
+                
+                // Calculate perpendicular direction for slit width
+                const perpAngle = angle + Math.PI / 2;
+                const halfWidthX = Math.cos(perpAngle) * slitHalfWidth;
+                const halfWidthY = Math.sin(perpAngle) * slitHalfWidth;
+                
+                // Create rectangular slit
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                
+                // Position the rectangle along the radial line
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2;
+                
+                // Calculate the position of the rectangle center
+                const rectCenterX = midX;
+                const rectCenterY = midY;
+                
+                // Calculate width and height of the rectangle
+                const length = outerRadius - innerRadius;
+                const rectX = rectCenterX - slitHalfWidth - Math.cos(angle) * length/2;
+                const rectY = rectCenterY - slitHalfWidth - Math.sin(angle) * length/2;
+                
+                rect.setAttribute("x", rectX);
+                rect.setAttribute("y", rectY);
+                rect.setAttribute("width", slitHalfWidth * 2);
+                rect.setAttribute("height", length);
+                rect.setAttribute("fill", "black");
+                rect.setAttribute("transform", `rotate(${angle * 180 / Math.PI}, ${centerX}, ${centerY})`);
+                
+                svg.appendChild(rect);
+            }
+        }
+
+        // Download SVG function
+        function downloadSVG() {
+            const svgElement = document.getElementById('mask-preview');
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svgElement);
+            
+            // Add proper SVG header
+            const fullSvgString = `<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgElement.getAttribute('width')}" height="${svgElement.getAttribute('height')}">
+${svgString.replace(/<svg.*?>/, '').replace('</svg>', '')}
+</svg>`;
+            
+            const blob = new Blob([fullSvgString], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bahtinov_mask.svg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Generate STL function (simplified - just creates a placeholder)
+        function generateSTL() {
+            const diameter = parseFloat(document.getElementById('diameter').value);
+            const thickness = parseFloat(document.getElementById('thickness').value);
+            
+            // This is a simplified representation - a real implementation would require complex 3D geometry
+            let stlContent = `solid bahtinov_mask\n`;
+            
+            // Placeholder vertices for a basic circular mask
+            const resolution = 36; // Number of segments for the circle
+            const radius = diameter / 2;
+            
+            // Generate top face
+            for (let i = 0; i < resolution; i++) {
+                const angle1 = (i / resolution) * 2 * Math.PI;
+                const angle2 = ((i + 1) / resolution) * 2 * Math.PI;
+                
+                const x1 = Math.cos(angle1) * radius;
+                const y1 = Math.sin(angle1) * radius;
+                const z1 = thickness;
+                
+                const x2 = Math.cos(angle2) * radius;
+                const y2 = Math.sin(angle2) * radius;
+                const z2 = thickness;
+                
+                // Center point
+                const cx = 0;
+                const cy = 0;
+                const cz = thickness;
+                
+                // Create triangle
+                stlContent += `facet normal 0 0 1\n`;
+                stlContent += `  outer loop\n`;
+                stlContent += `    vertex ${cx} ${cy} ${cz}\n`;
+                stlContent += `    vertex ${x1} ${y1} ${z1}\n`;
+                stlContent += `    vertex ${x2} ${y2} ${z2}\n`;
+                stlContent += `  endloop\n`;
+                stlContent += `endfacet\n`;
+            }
+            
+            // Generate bottom face
+            for (let i = 0; i < resolution; i++) {
+                const angle1 = (i / resolution) * 2 * Math.PI;
+                const angle2 = ((i + 1) / resolution) * 2 * Math.PI;
+                
+                const x1 = Math.cos(angle1) * radius;
+                const y1 = Math.sin(angle1) * radius;
+                const z1 = 0;
+                
+                const x2 = Math.cos(angle2) * radius;
+                const y2 = Math.sin(angle2) * radius;
+                const z2 = 0;
+                
+                // Center point
+                const cx = 0;
+                const cy = 0;
+                const cz = 0;
+                
+                // Create triangle (reversed for correct normal)
+                stlContent += `facet normal 0 0 -1\n`;
+                stlContent += `  outer loop\n`;
+                stlContent += `    vertex ${cx} ${cy} ${cz}\n`;
+                stlContent += `    vertex ${x2} ${y2} ${z2}\n`;
+                stlContent += `    vertex ${x1} ${y1} ${z1}\n`;
+                stlContent += `  endloop\n`;
+                stlContent += `endfacet\n`;
+            }
+            
+            // Generate sides
+            for (let i = 0; i < resolution; i++) {
+                const angle1 = (i / resolution) * 2 * Math.PI;
+                const angle2 = ((i + 1) / resolution) * 2 * Math.PI;
+                
+                const x1 = Math.cos(angle1) * radius;
+                const y1 = Math.sin(angle1) * radius;
+                
+                const x2 = Math.cos(angle2) * radius;
+                const y2 = Math.sin(angle2) * radius;
+                
+                // Side face triangles
+                stlContent += `facet normal ${x1} ${y1} 0\n`;
+                stlContent += `  outer loop\n`;
+                stlContent += `    vertex ${x1} ${y1} 0\n`;
+                stlContent += `    vertex ${x2} ${y2} 0\n`;
+                stlContent += `    vertex ${x2} ${y2} ${thickness}\n`;
+                stlContent += `  endloop\n`;
+                stlContent += `endfacet\n`;
+                
+                stlContent += `facet normal ${x1} ${y1} 0\n`;
+                stlContent += `  outer loop\n`;
+                stlContent += `    vertex ${x1} ${y1} 0\n`;
+                stlContent += `    vertex ${x2} ${y2} ${thickness}\n`;
+                stlContent += `    vertex ${x1} ${y1} ${thickness}\n`;
+                stlContent += `  endloop\n`;
+                stlContent += `endfacet\n`;
+            }
+            
+            stlContent += `endsolid bahtinov_mask`;
+            
+            return stlContent;
+        }
+
+        // Download STL function
+        function downloadSTL() {
+            const stlContent = generateSTL();
+            const blob = new Blob([stlContent], {type: 'application/sla'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bahtinov_mask.stl';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Event listeners
+        document.getElementById('generate-btn').addEventListener('click', generateMask);
+        document.getElementById('download-svg').addEventListener('click', downloadSVG);
+        document.getElementById('download-stl').addEventListener('click', downloadSTL);
+
+        // Initialize with a default mask
+        window.onload = generateMask;
+    </script>
+</body>
+</html>
